@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Swagata & Pritam Ki Shadi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #ffeef7;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+    }
+
+    .invite-wrapper {
+      position: relative;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .base-page,
+    .overlay-bg,
+    .event-layer {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .base-page {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: relative;
+      z-index: 1;
+    }
+
+    .overlay-bg,
+    .event-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .event-layer {
+      z-index: 3;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* nav arrows */
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: rgba(225, 29, 72, 0.9);
+      color: #fff;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+    }
+
+    .nav-btn-left  { left: 80px; }
+    .nav-btn-right { right: 80px; }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .secondary-btn {
+      margin-top: 12px;
+      margin-left: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid #e11d48;
+      cursor: pointer;
+      background: #fff0f7;
+      color: #e11d48;
+      font-size: 14px;
+    }
+
+    /* blur IN: appear */
+    .blur-in {
+      animation: blurIn 0.6s ease forwards;
+    }
+
+    @keyframes blurIn {
+      0%   { opacity: 0; filter: blur(6px); }
+      100% { opacity: 1; filter: blur(0px); }
+    }
+
+    /* blur OUT: disappear */
+    .blur-out {
+      animation: blurOut 0.6s ease forwards;
+    }
+
+    @keyframes blurOut {
+      0%   { opacity: 1; filter: blur(0px); }
+      100% { opacity: 0; filter: blur(6px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="invite-wrapper">
+    <!-- constant background1.svg -->
+    <img id="background1" class="base-page" src="background1.svg" alt="Wedding background" />
+
+    <!-- background2.svg used on pages 1–4 -->
+    <img id="background2" class="overlay-bg" src="background2.svg" alt="Events background" />
+
+    <!-- event overlays: event1–4 or event_all -->
+    <img id="eventLayer" class="event-layer" src="event1.svg" alt="Event details" />
+
+    <!-- navigation arrows -->
+    <button id="prevBtn" class="nav-btn nav-btn-left">&#x25C0;</button>
+    <button id="nextEventBtn" class="nav-btn nav-btn-right">&#x25B6;</button>
+  </div>
+
+  <button id="allBtn" class="secondary-btn">All event details</button>
+  <button id="topBtn" class="secondary-btn" style="display:none;">Start Page</button>
+  <button id="rsvpBtn" class="secondary-btn">RSVP</button>
+
+  <script>
+    const background2 = document.getElementById('background2');
+    const eventLayer  = document.getElementById('eventLayer');
+
+    const prevBtn      = document.getElementById('prevBtn');
+    const nextEventBtn = document.getElementById('nextEventBtn');
+    const allBtn       = document.getElementById('allBtn');
+    const topBtn       = document.getElementById('topBtn');
+    const rsvpBtn      = document.getElementById('rsvpBtn');
+
+    const rsvpUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZnlbrmlEa3LQOvEKfgwCh4HPctzZnFnWlAU10fc9LVX0_Aw/viewform?usp=header'; // put your form URL here [web:173][web:178]
+
+    const eventSvgs = ['event1.svg', 'event2.svg', 'event3.svg', 'event4.svg'];
+    let currentIndex = 0; // 0–3 = page1–4, 4 = page5 (event_all)
+
+    /* utility to restart an animation class */
+    function restartAnimation(el, cls) {
+      el.classList.remove('blur-in', 'blur-out');
+      void el.offsetWidth;
+      el.classList.add(cls);
+    }
+
+    /* swap one event overlay to another with out+in, bg2 unchanged */
+    function swapEvent(oldSrc, newSrc) {
+      // blur out old (eventLayer currently shows oldSrc)
+      restartAnimation(eventLayer, 'blur-out');
+
+      // after out finishes, change src and blur in
+      setTimeout(() => {
+        eventLayer.src = newSrc;
+        restartAnimation(eventLayer, 'blur-in');
+      }, 600); // match animation duration
+    }
+
+    /* initial state: page1, background2+event1 blur IN together */
+    background2.classList.remove('hidden');
+    eventLayer.src = 'event1.svg';
+    restartAnimation(background2, 'blur-in');
+    restartAnimation(eventLayer, 'blur-in');
+    prevBtn.disabled = true;
+    nextEventBtn.disabled = false;
+
+    function goToPage(index) {
+      // index 0–3 : background2 visible, event1–4
+      // index 4   : page5, background2 hidden, event_all
+      currentIndex = index;
+
+      if (currentIndex <= 3) {
+        // coming to 1–4 from 5 or between events
+        background2.classList.remove('hidden');
+        allBtn.style.display = 'inline-block';
+        topBtn.style.display = 'none';
+        prevBtn.disabled = currentIndex === 0;
+        nextEventBtn.disabled = false;
+      } else {
+        // page5
+        background2.classList.add('hidden');
+        allBtn.style.display = 'none';
+        topBtn.style.display = 'inline-block';
+        prevBtn.disabled = false;
+        nextEventBtn.disabled = true; // faded
+      }
+    }
+
+    // Prev arrow logic
+    prevBtn.addEventListener('click', () => {
+      if (currentIndex === 4) {
+        // page5 -> page4 (background2+event4 blur IN together, event_all blur OUT)
+        restartAnimation(eventLayer, 'blur-out');
+        setTimeout(() => {
+          background2.classList.remove('hidden');
+          eventLayer.src = 'event4.svg';
+          restartAnimation(background2, 'blur-in');
+          restartAnimation(eventLayer, 'blur-in');
+          goToPage(3);
+        }, 600);
+        return;
+      }
+
+      if (currentIndex > 0 && currentIndex <= 3) {
+        const newIndex = currentIndex - 1;
+        swapEvent(eventSvgs[currentIndex], eventSvgs[newIndex]);
+        goToPage(newIndex);
+      }
+    });
+
+    // Next arrow logic
+    nextEventBtn.addEventListener('click', () => {
+      if (currentIndex === 4) return; // disabled visually anyway
+
+      if (currentIndex < 3) {
+        const newIndex = currentIndex + 1;
+        swapEvent(eventSvgs[currentIndex], eventSvgs[newIndex]);
+        goToPage(newIndex);
+      } else if (currentIndex === 3) {
+        // page4 -> page5 : background2+event4 blur OUT, event_all blur IN
+        restartAnimation(background2, 'blur-out');
+        restartAnimation(eventLayer, 'blur-out');
+        setTimeout(() => {
+          background2.classList.add('hidden');
+          eventLayer.src = 'event_all.svg';
+          restartAnimation(eventLayer, 'blur-in');
+          goToPage(4);
+        }, 600);
+      }
+    });
+
+    // All events button goes to page5 with correct blur sequence
+    allBtn.addEventListener('click', () => {
+      if (currentIndex <= 3) {
+        restartAnimation(background2, 'blur-out');
+        restartAnimation(eventLayer, 'blur-out');
+        setTimeout(() => {
+          background2.classList.add('hidden');
+          eventLayer.src = 'event_all.svg';
+          restartAnimation(eventLayer, 'blur-in');
+          goToPage(4);
+        }, 600);
+      }
+    });
+
+    // Take me to top: from page5 -> page1
+    topBtn.addEventListener('click', () => {
+      if (currentIndex === 4) {
+        // event_all blur OUT, background2+event1 blur IN together
+        restartAnimation(eventLayer, 'blur-out');
+        setTimeout(() => {
+          background2.classList.remove('hidden');
+          eventLayer.src = 'event1.svg';
+          restartAnimation(background2, 'blur-in');
+          restartAnimation(eventLayer, 'blur-in');
+          goToPage(0);
+        }, 600);
+      }
+    });
+
+    // RSVP
+    rsvpBtn.addEventListener('click', () => {
+      window.open(rsvpUrl, '_blank'); // [web:173][web:179]
+    });
+  </script>
+</body>
+</html>
