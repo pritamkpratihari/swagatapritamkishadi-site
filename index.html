@@ -23,10 +23,29 @@
       text-align: center;
     }
 
+    /* full-screen loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: #ffeef7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      z-index: 9999;
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      color: #e11d48;
+      font-weight: 700;
+    }
+
     .invite-wrapper {
       position: relative;
       max-width: 480px;
       margin: 0 auto;
+      opacity: 0;
     }
 
     .base-page,
@@ -121,6 +140,11 @@
   </style>
 </head>
 <body>
+  
+  <div id="loader" class="loading-overlay">
+    <div class="loading-text">Loading . . .</div>
+  </div>
+  
   <div class="invite-wrapper">
     <!-- constant background1.svg -->
     <img id="background1" class="base-page" src="background1.svg" alt="Wedding background" />
@@ -265,8 +289,13 @@
       window.open(rsvpUrl, '_blank');
     });
 
-    // Initial state AFTER everything has loaded (smoother on Netlify)
+    // Initial state AFTER everything has loaded (show invite, hide loader)
     window.addEventListener('load', () => {
+      const loader = document.getElementById('loader');
+      if (loader) loader.style.display = 'none';
+    
+      document.querySelector('.invite-wrapper').style.opacity = '1';
+    
       background2.classList.remove('hidden');
       eventLayer.src = 'event1.svg';
       restartAnimation(background2, 'blur-in');
