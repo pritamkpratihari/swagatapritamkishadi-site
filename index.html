@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <title>Swagata & Pritam Ki Shadi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Preload main SVG assets to reduce first-load lag -->
+  <link rel="preload" href="background1.svg" as="image" />
+  <link rel="preload" href="background2.svg" as="image" />
+  <link rel="preload" href="event1.svg" as="image" />
+  <link rel="preload" href="event2.svg" as="image" />
+  <link rel="preload" href="event3.svg" as="image" />
+  <link rel="preload" href="event4.svg" as="image" />
+  <link rel="preload" href="event_all.svg" as="image" />
+
   <style>
     body {
       margin: 0;
@@ -69,8 +79,8 @@
       z-index: 4;
     }
 
-    .nav-btn-left  { left: 60px; }
-    .nav-btn-right { right: 60px; }
+    .nav-btn-left  { left: 80px; }
+    .nav-btn-right { right: 80px; }
 
     .nav-btn:disabled {
       opacity: 0.3;
@@ -84,8 +94,8 @@
       border-radius: 999px;
       border: 1px solid #e11d48;
       cursor: pointer;
-      background: #e11d48/*#fff0f7*/;
-      color: #fff0f7/*#e11d48*/;
+      background: #e11d48;  /* #fff0f7 */
+      color: #fff0f7;       /* #e11d48 */
       font-size: 14px;
     }
 
@@ -131,16 +141,16 @@
   <button id="rsvpBtn" class="secondary-btn">RSVP</button>
 
   <script>
-    const background2 = document.getElementById('background2');
-    const eventLayer  = document.getElementById('eventLayer');
+    const background2   = document.getElementById('background2');
+    const eventLayer    = document.getElementById('eventLayer');
 
-    const prevBtn      = document.getElementById('prevBtn');
-    const nextEventBtn = document.getElementById('nextEventBtn');
-    const allBtn       = document.getElementById('allBtn');
-    const topBtn       = document.getElementById('topBtn');
-    const rsvpBtn      = document.getElementById('rsvpBtn');
+    const prevBtn       = document.getElementById('prevBtn');
+    const nextEventBtn  = document.getElementById('nextEventBtn');
+    const allBtn        = document.getElementById('allBtn');
+    const topBtn        = document.getElementById('topBtn');
+    const rsvpBtn       = document.getElementById('rsvpBtn');
 
-    const rsvpUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZnlbrmlEa3LQOvEKfgwCh4HPctzZnFnWlAU10fc9LVX0_Aw/viewform?usp=header'; // put your form URL here [web:173][web:178]
+    const rsvpUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZnlbrmlEa3LQOvEKfgwCh4HPctzZnFnWlAU10fc9LVX0_Aw/viewform?usp=header';
 
     const eventSvgs = ['event1.svg', 'event2.svg', 'event3.svg', 'event4.svg'];
     let currentIndex = 0; // 0–3 = page1–4, 4 = page5 (event_all)
@@ -154,43 +164,28 @@
 
     /* swap one event overlay to another with out+in, bg2 unchanged */
     function swapEvent(oldSrc, newSrc) {
-      // blur out old (eventLayer currently shows oldSrc)
       restartAnimation(eventLayer, 'blur-out');
-
-      // after out finishes, change src and blur in
       setTimeout(() => {
         eventLayer.src = newSrc;
         restartAnimation(eventLayer, 'blur-in');
       }, 600); // match animation duration
     }
 
-    /* initial state: page1, background2+event1 blur IN together */
-    background2.classList.remove('hidden');
-    eventLayer.src = 'event1.svg';
-    restartAnimation(background2, 'blur-in');
-    restartAnimation(eventLayer, 'blur-in');
-    prevBtn.disabled = true;
-    nextEventBtn.disabled = false;
-
     function goToPage(index) {
-      // index 0–3 : background2 visible, event1–4
-      // index 4   : page5, background2 hidden, event_all
       currentIndex = index;
 
       if (currentIndex <= 3) {
-        // coming to 1–4 from 5 or between events
         background2.classList.remove('hidden');
         allBtn.style.display = 'inline-block';
         topBtn.style.display = 'none';
         prevBtn.disabled = currentIndex === 0;
         nextEventBtn.disabled = false;
       } else {
-        // page5
         background2.classList.add('hidden');
         allBtn.style.display = 'none';
         topBtn.style.display = 'inline-block';
         prevBtn.disabled = false;
-        nextEventBtn.disabled = true; // faded
+        nextEventBtn.disabled = true;
       }
     }
 
@@ -254,7 +249,6 @@
     // Take me to top: from page5 -> page1
     topBtn.addEventListener('click', () => {
       if (currentIndex === 4) {
-        // event_all blur OUT, background2+event1 blur IN together
         restartAnimation(eventLayer, 'blur-out');
         setTimeout(() => {
           background2.classList.remove('hidden');
@@ -268,7 +262,18 @@
 
     // RSVP
     rsvpBtn.addEventListener('click', () => {
-      window.open(rsvpUrl, '_blank'); // [web:173][web:179]
+      window.open(rsvpUrl, '_blank');
+    });
+
+    // Initial state AFTER everything has loaded (smoother on Netlify)
+    window.addEventListener('load', () => {
+      background2.classList.remove('hidden');
+      eventLayer.src = 'event1.svg';
+      restartAnimation(background2, 'blur-in');
+      restartAnimation(eventLayer, 'blur-in');
+      prevBtn.disabled = true;
+      nextEventBtn.disabled = false;
+      currentIndex = 0;
     });
   </script>
 </body>
